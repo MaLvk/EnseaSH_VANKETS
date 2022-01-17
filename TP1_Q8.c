@@ -66,9 +66,6 @@ static int execute(char* command, struct timespec * tmps_start, struct timespec 
 			close(descripteur);
 		}
 	
-	//GESTION DES REDIRECTIONS "|"
-		token=strtok(command,"|");
-		
 		
 	//GESTION DES ESPACES
 		token = strtok(command," "); // extraction du premier token

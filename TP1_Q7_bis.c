@@ -24,7 +24,7 @@ char* consoleRead(){
 	return reading;
 }
 
-static int execute(char* command, struct timespec * tmps_start, struct timespec * tmps_stop){
+static int execute(char* command, struct timespec tmps_start, struct timespec tmps_stop){
 	char* cmd_exit = "exit";
 	int status;
 	
@@ -34,16 +34,15 @@ static int execute(char* command, struct timespec * tmps_start, struct timespec 
 			exit(EXIT_SUCCESS);
 		}
 	
-	clock_gettime(CLOCK_REALTIME, tmps_start);
-	
 	pid_t pid = fork(); //création d'un fils car la commande execvp contient un exit qui nous
 						//ferait sortir du programme
 	if (pid != 0){//père
 		wait(&status);
-		clock_gettime(CLOCK_REALTIME, tmps_stop);
+		clock_gettime(CLOCK_REALTIME, &tmps_stop);
 		return status;
 	}
 	else { //fils
+		clock_gettime(CLOCK_REALTIME, &tmps_start);
 		char * commandToken[COMMANDSIZE];
 		char * filename;
 		char * token;
@@ -81,17 +80,16 @@ static int execute(char* command, struct timespec * tmps_start, struct timespec 
 	}
 } 
 //programme pour vérifier si le fils s'est terminé normalement ou non
-void checkStatus(int status, struct timespec * start, struct timespec * stop){
+void checkStatus(int status, struct timespec start, struct timespec stop){
 	char *prompt_retour=malloc(PROMPTSIZE);
-	double duration = (stop->tv_nsec - start->tv_nsec)/MILLION+(stop->tv_sec-start->tv_sec)*1000;
 	
 	//code de retour
 	if (WIFEXITED(status)){
-		sprintf(prompt_retour, "ensea [exit:%d|%.0lf ms] %% ", WEXITSTATUS(status), duration);
+		sprintf(prompt_retour, "ensea [exit:%d|%ld ms] %% ", WEXITSTATUS(status), (stop.tv_nsec - start.tv_nsec)/MILLION);
 	}
 	//signal	
 	else if (WIFSIGNALED(status)) {
-		sprintf(prompt_retour, "ensea [sign:%d|%.0lf ms] %% ", WTERMSIG(status), duration);
+		sprintf(prompt_retour, "ensea [sign:%d|%ld ms] %% ", WTERMSIG(status), (stop.tv_nsec - start.tv_nsec)/MILLION);
 	}
 	
 	else {
@@ -113,8 +111,8 @@ int main(){
 	while(1){
 		//REPL
 		command = consoleRead();
-		status = execute(command, &tmps_start, &tmps_stop);
-		checkStatus(status, &tmps_start, &tmps_stop);
+		status = execute(command, tmps_start, tmps_stop);
+		checkStatus(status, tmps_start, tmps_stop);
 	}
 	exit(EXIT_SUCCESS);
 }

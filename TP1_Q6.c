@@ -60,7 +60,7 @@ static int execute(char* command, struct timespec * tmps_start, struct timespec 
 //programme pour vérifier si le fils s'est terminé normalement ou non
 void checkStatus(int status, struct timespec * start, struct timespec * stop){
 	char *prompt_retour=malloc(PROMPTSIZE);
-	double duration = (stop->tv_nsec - start->tv_nsec)/MILLION;
+	double duration = (stop->tv_nsec - start->tv_nsec)/MILLION+(stop->tv_sec-start->tv_sec)*1000;
 	
 	//code de retour
 	if (WIFEXITED(status)){
